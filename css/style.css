@@ -8,7 +8,15 @@ body {
 
 .container {
   height: 100%;
-  display: flex;
+  
   justify-content: center;
   align-items: center;
+}
+
+#pieces {
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 5vh;
+  height: 6vh;  
+
 }

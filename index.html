@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1" />
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <link rel="stylesheet" href="css/chessboard-1.0.0.css">
-  <link rel="stylesheet" href="css/stle.css">
+  <link rel="stylesheet" href="css/style.css">
 
   <title>Chess custom UI</title>
   <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
@@ -19,11 +19,34 @@
 
 <body>
     <div class="container">
-        <div id="board2" style="width: 400px"></div>
-            <button id="startBtn">Start Position</button>
-            <button id="clearBtn">Clear Board</button>
+        <div class="row justify-content-start">
+            <div class="col">
+              Player:
+            </div>
+            <button class="col" id="startBtn">Start Position</button>
+            <button class="col" id="clearBtn">Clear Board</button>
+        </div>
+        <div class="row align-items-center">
+            <div class="col">
+              One of three columns
+            </div>
+            <div class="col" id="myBoard" style="width: 400px"></div>
+            <div class="col">
+              One of three columns
+            </div>
+          </div>
+        <div class="row justify-content-evenly">
+            <button class="col" id="pieces" style="background-image: url('img/chesspieces/wikipedia/wQ.png');"></button>
+            <button class="col" id="pieces" style="background-image: url('img/chesspieces/wikipedia/wK.png');"></button>
+            <button class="col" id="pieces" style="background-image: url('img/chesspieces/wikipedia/wR.png');"></button>
+            <button class="col" id="pieces" style="background-image: url('img/chesspieces/wikipedia/wB.png');"></button>
+            <button class="col" id="pieces" style="background-image: url('img/chesspieces/wikipedia/wN.png');"></button>
+            <button class="col" id="pieces" style="background-image: url('img/chesspieces/wikipedia/wP.png');"></button>
+        </div>
         <script src="js/game.js"></script>
     </div>
+
+    
 </body>
 
 </html>

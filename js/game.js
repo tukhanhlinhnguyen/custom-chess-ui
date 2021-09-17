@@ -1,8 +1,20 @@
-var board2 = Chessboard('board2', {
-    draggable: true,
-    dropOffBoard: 'trash',
-    sparePieces: true
-  })
-  
-  $('#startBtn').on('click', board2.start)
-  $('#clearBtn').on('click', board2.clear)
+var board = null
+var game = new Chess()
+
+function makeRandomMove () {
+  var possibleMoves = game.moves()
+
+  // exit if the game is over
+  if (game.game_over()) return
+
+  var randomIdx = Math.floor(Math.random() * possibleMoves.length)
+  game.move(possibleMoves[randomIdx])
+  board.position(game.fen())
+
+  window.setTimeout(makeRandomMove, 500)
+}
+
+board = Chessboard('myBoard', 'start')
+
+
+//window.setTimeout(makeRandomMove, 500)
