@@ -8,15 +8,59 @@ body {
 
 .container {
   height: 100%;
-  
+
   justify-content: center;
   align-items: center;
 }
 
-#pieces {
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 5vh;
-  height: 6vh;  
+.pieces {
+  border: 2px solid !important;
+}
 
+#status {
+  height: 300px;
+  border-radius: 10px;
+  border: 2px solid;
+}
+
+#statistics {
+  height: 640px;
+  border-radius: 10px;
+  border: 2px solid;
+  overflow: scroll;
+}
+
+#data_svg,
+#reset_icon,
+#player_icon {
+  height: 55px;
+  width: 50px;
+}
+
+#reset_icon {
+  float: right;
+}
+
+/*//////////////////////////////////////////////////////////////////
+/////Toast
+//////////////////////////////////////////////////////////////////*/
+.toastify {
+  padding: 12px 20px;
+  color: #ffffff;
+  display: inline-block;
+  box-shadow: 0 3px 6px -1px rgba(0, 0, 0, 0.12),
+    0 10px 36px -4px rgba(77, 96, 232, 0.3);
+  background: -webkit-linear-gradient(315deg, #73a5ff, #5477f5);
+  background: linear-gradient(135deg, #73a5ff, #5477f5);
+  position: fixed;
+  top: -150px;
+  right: 15px;
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.215, 0.61, 0.355, 1);
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.toastify.on {
+  opacity: 1;
 }
