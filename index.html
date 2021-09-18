@@ -34,32 +34,51 @@
             <div class="col-6">
               Player: <img id="player_icon" src ="img/chesspieces/wikipedia/wK.png" alt="current player">
               <img id="reset_icon" src ="img/new.svg" alt="current player"  onclick="start()">
-              <div id="myBoard" style="width: 100%"></div>
+              <div id="myBoard" style="width: 80%"></div>
             </div>
-            <div class="col-2 align-middle">
-              <div class="align-middle">
+            <div class="col-2"></div>
+            <div class="col-2">
+              <div>
+                <h4>1/2 move</h4>
                 <div class="form-check align-middle">
-                  <input class="form-check-input" type="radio" name="mode" value="Minmax" id="flexCheckMinmax" checked>
+                  <input class="form-check-input" type="radio" name="PawnMove" value="1" id="flexCheckPawnMove1" checked>
+                  <label class="form-check-label" for="flexCheckDefault">
+                    1
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="PawnMove" value="2" id="flexCheckPawnMove2">
+                  <label class="form-check-label" for="flexCheckChecked">
+                    2
+                  </label>
+                </div>
+              </div>
+
+              <hr class="dropdown-divider">
+
+              <div>
+                <h4>Configuration</h4>
+                <div class="form-check align-middle">
+                  <input class="form-check-input" type="radio" name="Mode" value="Minmax" id="flexCheckMinmax">
                   <label class="form-check-label" for="flexCheckDefault">
                     max/random length play move
                   </label>
                 </div>
                 <div class="form-check">
-                  <input class="form-check-input" type="radio" name="mode" value="Aggressive" id="flexCheckAggressive">
+                  <input class="form-check-input" type="radio" name="Mode" value="Aggressive" id="flexCheckAggressive" checked>
                   <label class="form-check-label" for="flexCheckChecked">
                     aggressive
                     always KILL
                   </label>
                 </div>
                 <div class="form-check">
-                  <input class="form-check-input" type="radio" name="mode" value="Defensive" id="flexCheckDefensive">
+                  <input class="form-check-input" type="radio" name="Mode" value="Defensive" id="flexCheckDefensive">
                   <label class="form-check-label" for="flexCheckChecked">
                     defensive
                     KILL randomly
                   </label>
                 </div>
               </div>
-              
             </div>
           </div>
         <div class="row justify-content-evenly mt-5">

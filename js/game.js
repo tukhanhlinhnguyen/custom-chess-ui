@@ -1,15 +1,18 @@
 let board = null
 let game = new Chess()
 let currentColor = "w"
+let initiateWhitePawnPosition = ["a2","b2","c2","d2","e2","f2","g2","h2"]
+let initiateBlackPawnPosition = ["a7","b7","c7","d7","e7","f7","g7","h7"]
 
 function start(){
-  board = Chessboard('myBoard', 'start')
-  game.reset();
+  window.location.reload()
 }
 
 function move_the_piece(piece){
-  let possibleMoves;
-  let mode = document.querySelector('input[name="mode"]:checked').value;
+  let possibleMoves=[];
+  let mode = document.querySelector('input[name="Mode"]:checked').value;
+  let pawnMode = document.querySelector('input[name="PawnMove"]:checked').value;
+
   switch (mode) {
     case "Minmax":
       possibleMoves = getBestMove(game,piece);
@@ -17,8 +20,6 @@ function move_the_piece(piece){
         showToast("No legal move for this piece. Maybe try another piece or mode")
         updateStatus();
       }else{
-        let randomIdx = Math.floor(Math.random() * possibleMoves.length)
-        game.move(possibleMoves[randomIdx])
         game.move(getBestMove(game,piece))
         board.position(game.fen())
         updateColor();
@@ -27,32 +28,68 @@ function move_the_piece(piece){
       break;
     case "Aggressive":
       //looking for capturing
-      possibleMoves = get_lethal_legal_moves_by_piece(game,piece);
+      if(possibleMoves.length==0){
+        possibleMoves=get_lethal_legal_moves_by_piece(game,piece);
+      }
+
       //if not available, make a normal move
       if(possibleMoves.length==0){
-        possibleMoves = get_legal_moves_by_piece(game,piece);
+        //check the pawn move, if range 1 subtract all range 2 initiate move and vice-versa
+        if(piece.type == "p" && checkPawnInInitiatePosition()){
+          possibleMoves=get_legal_moves_by_piece(game,piece);
+          console.log('pawnMode:', pawnMode)
+          switch (pawnMode) {
+            case "1":
+              let initiate2rowPawnMove = get_legal_pawn_first_2row_moves(game,piece);
+              possibleMoves = possibleMoves.filter(x => !initiate2rowPawnMove.includes(x));
+              break;
+            case "2":
+              let initiate1rowPawnMove = get_legal_pawn_first_1row_moves(game,piece);
+              possibleMoves = possibleMoves.filter(x => !initiate1rowPawnMove.includes(x));
+              break;
+          }
+        }else{
+          possibleMoves=get_legal_moves_by_piece(game,piece);
+        }
       }
-      if(possibleMoves.length==0){
-        showToast("This piece can't capture nobody")
-        updateStatus();
-      }else{
-        let randomIdx = Math.floor(Math.random() * possibleMoves.length)
-        game.move(possibleMoves[randomIdx])
-        game.move(getBestMove(game,piece))
-        board.position(game.fen())
-        updateColor();
-        updateStatus();
-      }
-      break;
-    case "Defensive":
-      possibleMoves = get_legal_moves_by_piece(game,piece);
       if(possibleMoves.length==0){
         showToast("No legal move for this piece. Maybe try another piece or mode")
         updateStatus();
       }else{
         let randomIdx = Math.floor(Math.random() * possibleMoves.length)
         game.move(possibleMoves[randomIdx])
-        game.move(getBestMove(game,piece))
+        board.position(game.fen())
+        updateColor();
+        updateStatus();
+      }
+      break;
+    case "Defensive":
+      //if not available, make a normal move
+      if(possibleMoves.length==0){
+        //check the pawn move, if range 1 subtract all range 2 initiate move and vice-versa
+        if(piece.type == "p" && checkPawnInInitiatePosition()){
+          possibleMoves=get_legal_moves_by_piece(game,piece);
+          console.log('pawnMode:', pawnMode)
+          switch (pawnMode) {
+            case "1":
+              let initiate2rowPawnMove = get_legal_pawn_first_2row_moves(game,piece);
+              possibleMoves = possibleMoves.filter(x => !initiate2rowPawnMove.includes(x));
+              break;
+            case "2":
+              let initiate1rowPawnMove = get_legal_pawn_first_1row_moves(game,piece);
+              possibleMoves = possibleMoves.filter(x => !initiate1rowPawnMove.includes(x));
+              break;
+          }
+        }else{
+          possibleMoves=get_legal_moves_by_piece(game,piece);
+        }
+      }
+      if(possibleMoves.length==0){
+        showToast("No legal move for this piece. Maybe try another piece or mode")
+        updateStatus();
+      }else{
+        let randomIdx = Math.floor(Math.random() * possibleMoves.length)
+        game.move(possibleMoves[randomIdx])
         board.position(game.fen())
         updateColor();
         updateStatus();
@@ -69,6 +106,18 @@ function move_the_piece(piece){
 const get_legal_moves_by_piece = (game, piece) => {
   return game.moves({ verbose: true })
               .filter((move) => move.piece === piece.type && move.color === piece.color)
+              .map((move) => move.san)
+}
+
+const get_legal_pawn_first_1row_moves = (game, piece) => {
+  return game.moves({ verbose: true })
+              .filter((move) => move.piece === piece.type && move.color === piece.color && getMoveRange(move.from,move.to) ==1 && isInfirstRow(move.color, move.from))
+              .map((move) => move.san)
+}
+
+const get_legal_pawn_first_2row_moves = (game, piece) => {
+  return game.moves({ verbose: true })
+              .filter((move) => move.piece === piece.type && move.color === piece.color && getMoveRange(move.from,move.to) ==2  && isInfirstRow(move.color, move.from))
               .map((move) => move.san)
 }
 
@@ -96,6 +145,31 @@ const get_piece_positions = (game, piece) => {
   })
 }
 
+function getMoveRange(from,to){
+  let fromRow = from.replace( /^\D+/g, '');
+  let toRow = to.replace( /^\D+/g, '');
+  return Math.abs(toRow - fromRow)
+}
+
+function checkPawnInInitiatePosition(){
+  let pawn_positions = get_piece_positions(game, { type: 'p', color: currentColor})
+
+  switch(currentColor) {
+    case "w":
+      return pawn_positions.some(item => initiateWhitePawnPosition.includes(item))
+    case "b":
+      return pawn_positions.some(item => initiateBlackPawnPosition.includes(item))
+  }
+}
+
+function isInfirstRow(color,from){
+  if(color=="w"){
+    return  initiateWhitePawnPosition.includes(from)
+  }else{
+    return  initiateBlackPawnPosition.includes(from)
+  }
+}
+
 /////////////////////////////////////////////////////////////////////
 /////UI
 /////////////////////////////////////////////////////////////////////
@@ -110,7 +184,6 @@ function updateColor(){
 
 function updateStatus(){
   let msg = "";
-  console.log('game.in_checkmate():', game.in_checkmate())
   if(game.in_check()){
     msg+="The side to move is in check"
     msg+="<br />"
@@ -153,35 +226,53 @@ function showToast(msg){
 /////Minimax with Alpha Beta Pruning
 /////////////////////////////////////////////////////////////////////
 
-var getBestMove = function (game,piece) {
+let getBestMove = function (game,piece) {
   if (game.game_over()) {
       alert('Game over');
   }
 
   positionCount = 0;
-  var depth = 3;
+  let depth = 3;
 
-  var bestMove = minimaxRoot(depth, game, true,piece);
+  let bestMove = minimaxRoot(depth, game, true,piece);
 
   return bestMove;
 };
 
-var minimax = function (depth, game, isMaximisingPlayer,piece) {
+let minimax = function (depth, game, isMaximisingPlayer,piece) {
+  let pawnMode = document.querySelector('input[name="PawnMove"]:checked').value;
+  let possibleMoves = get_legal_moves_by_piece(game,piece);
+
   if (depth === 0) {
-      return -evaluateBoard(game.board());
+      return -evaluateBoard(game.board(),currentColor);
   }
-  var newGameMoves = get_legal_moves_by_piece(game,piece);
+  let newGameMoves;
+  if(piece.type == "p"){
+    switch (pawnMode) {
+      case "1":
+        let initiate2rowPawnMove = get_legal_pawn_first_2row_moves(game,piece);
+        newGameMoves = possibleMoves.filter(x => !initiate2rowPawnMove.includes(x));
+        break;
+      case "2":
+        let initiate1rowPawnMove = get_legal_pawn_first_1row_moves(game,piece);
+        newGameMoves = possibleMoves.filter(x => !initiate1rowPawnMove.includes(x));
+        break;
+    }
+  }else{
+    newGameMoves=get_legal_moves_by_piece(game,piece);
+  }
+
   if (isMaximisingPlayer) {
-      var bestMove = -9999;
-      for (var i = 0; i < newGameMoves.length; i++) {
+      let bestMove = -9999;
+      for (let i = 0; i < newGameMoves.length; i++) {
           game.move(newGameMoves[i]);
           bestMove = Math.max(bestMove, minimax(depth - 1, game, !isMaximisingPlayer));
           game.undo();
       }
       return bestMove;
   } else {
-      var bestMove = 9999;
-      for (var i = 0; i < newGameMoves.length; i++) {
+      let bestMove = 9999;
+      for (let i = 0; i < newGameMoves.length; i++) {
           game.move(newGameMoves[i]);
           bestMove = Math.min(bestMove, minimax(depth - 1, game, !isMaximisingPlayer));
           game.undo();
@@ -190,16 +281,31 @@ var minimax = function (depth, game, isMaximisingPlayer,piece) {
   }
 };
 
-var minimaxRoot =function(depth, game, isMaximisingPlayer,piece) {
+let minimaxRoot =function(depth, game, isMaximisingPlayer,piece) {
+  let pawnMode = document.querySelector('input[name="PawnMove"]:checked').value;
+  let possibleMoves = get_legal_moves_by_piece(game,piece);
 
-  var newGameMoves = get_legal_moves_by_piece(game,piece);
-  var bestMove = -9999;
-  var bestMoveFound;
+  let newGameMoves;
+  if(piece.type == "p"){
+    switch (pawnMode) {
+      case "1":
+        let initiate2rowPawnMove = get_legal_pawn_first_2row_moves(game,piece);
+        newGameMoves = possibleMoves.filter(x => !initiate2rowPawnMove.includes(x));        break;
+      case "2":
+        let initiate1rowPawnMove = get_legal_pawn_first_1row_moves(game,piece);
+        newGameMoves = possibleMoves.filter(x => !initiate1rowPawnMove.includes(x));
+        break;
+    }
+  }else{
+    newGameMoves=get_legal_moves_by_piece(game,piece);
+  }
+  let bestMove = -9999;
+  let bestMoveFound;
 
-  for(var i = 0; i < newGameMoves.length; i++) {
-      var newGameMove = newGameMoves[i]
+  for(let i = 0; i < newGameMoves.length; i++) {
+      let newGameMove = newGameMoves[i]
       game.move(newGameMove);
-      var value = minimax(depth - 1, game, -10000, 10000, !isMaximisingPlayer,piece);
+      let value = minimax(depth - 1, game, -10000, 10000, !isMaximisingPlayer,piece);
       game.undo();
       if(value >= bestMove) {
           bestMove = value;
@@ -243,7 +349,7 @@ let evaluateBoard = function(board, color) {
 ////////////////////////////////////////////////////////////////////
 function writeHistory() {
   moveHistory = game.history({ verbose: true });
-  var output = "<ul>";
+  let output = "<ul>";
     Object.keys(moveHistory).forEach(function(k) {
         if (typeof moveHistory[k] == "object" && moveHistory[k] !== null){
             output += "<li>";
@@ -305,7 +411,7 @@ function getPieceText(piece) {
 /////Random move for testing
 /////////////////////////////////////////////////////////////////////
 function makeRandomMove () {
-  var possibleMoves = game.moves()
+  let possibleMoves = game.moves()
 
   // exit if the game is over
   if (game.game_over()) return
