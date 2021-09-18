@@ -17,13 +17,13 @@ body {
 }
 
 #status {
-  height: 300px;
+  height: 200px;
   border-radius: 10px;
   border: 2px solid;
 }
 
 #statistics {
-  height: 640px;
+  height: 585px;
   border-radius: 10px;
   border: 2px solid;
   overflow: scroll;
@@ -34,10 +34,6 @@ body {
 #player_icon {
   height: 55px;
   width: 50px;
-}
-
-#reset_icon {
-  float: right;
 }
 
 /*//////////////////////////////////////////////////////////////////

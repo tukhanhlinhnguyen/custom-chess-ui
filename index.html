@@ -20,7 +20,7 @@
 <body>
     <div class="container-fluid mt-5">
         <div class="row align-items-center">
-            <div class="col-2">
+            <div class="col-3">
                   <img id="data_svg" src ="img/chess.svg" alt="current player"> Status
                   <div id="status">
     
@@ -33,11 +33,16 @@
             </div>
             <div class="col-6">
               Player: <img id="player_icon" src ="img/chesspieces/wikipedia/wK.png" alt="current player">
-              <img id="reset_icon" src ="img/new.svg" alt="current player"  onclick="start()">
-              <div id="myBoard" style="width: 80%"></div>
+              <div id="myBoard" style="width: 100%"></div>
             </div>
-            <div class="col-2"></div>
+            <div class="col-1"></div>
             <div class="col-2">
+              <div>
+                <img id="reset_icon" src ="img/new.svg" alt="current player"  onclick="start()">
+              </div>
+
+              <hr class="dropdown-divider">
+
               <div>
                 <h4>1/2 move</h4>
                 <div class="form-check align-middle">
