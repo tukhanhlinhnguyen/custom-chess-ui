@@ -3,16 +3,24 @@ let game = new Chess()
 let currentColor = "w"
 let initiateWhitePawnPosition = ["a2","b2","c2","d2","e2","f2","g2","h2"]
 let initiateBlackPawnPosition = ["a7","b7","c7","d7","e7","f7","g7","h7"]
+let AIDepth = 3
 
 function start(){
   window.location.reload()
 }
 
-function move_the_piece(piece){
+/////////////////////////////////////////////////////////////////////
+/////GAME MECHANIC
+/////////////////////////////////////////////////////////////////////
+
+function move_the_piece_manually(piece){
   let possibleMoves=[];
   let mode = document.querySelector('input[name="Mode"]:checked').value;
   let pawnMode = document.querySelector('input[name="PawnMove"]:checked').value;
+  let AIActivated = document.getElementById("toogleAi");
+  let pieceMoved = false;
 
+  //switching between mode 
   switch (mode) {
     case "Minmax":
       possibleMoves = getBestMove(game,piece);
@@ -24,6 +32,7 @@ function move_the_piece(piece){
         board.position(game.fen())
         updateColor();
         updateStatus();
+        pieceMoved=true;
       }
       break;
     case "Aggressive":
@@ -34,10 +43,9 @@ function move_the_piece(piece){
 
       //if not available, make a normal move
       if(possibleMoves.length==0){
-        //check the pawn move, if range 1 subtract all range 2 initiate move and vice-versa
+        //check if the piece is a pawn, if range mode is 1 subtract all range 2 initiate move and vice-versa
         if(piece.type == "p" && checkPawnInInitiatePosition()){
           possibleMoves=get_legal_moves_by_piece(game,piece);
-          console.log('pawnMode:', pawnMode)
           switch (pawnMode) {
             case "1":
               let initiate2rowPawnMove = get_legal_pawn_first_2row_moves(game,piece);
@@ -49,18 +57,22 @@ function move_the_piece(piece){
               break;
           }
         }else{
+          //else we make a defensive move as a last resort
           possibleMoves=get_legal_moves_by_piece(game,piece);
         }
       }
+      //no move available, return error msg
       if(possibleMoves.length==0){
         showToast("No legal move for this piece. Maybe try another piece or mode")
         updateStatus();
       }else{
+      //Make the move
         let randomIdx = Math.floor(Math.random() * possibleMoves.length)
         game.move(possibleMoves[randomIdx])
         board.position(game.fen())
         updateColor();
         updateStatus();
+        pieceMoved=true;
       }
       break;
     case "Defensive":
@@ -69,7 +81,6 @@ function move_the_piece(piece){
         //check the pawn move, if range 1 subtract all range 2 initiate move and vice-versa
         if(piece.type == "p" && checkPawnInInitiatePosition()){
           possibleMoves=get_legal_moves_by_piece(game,piece);
-          console.log('pawnMode:', pawnMode)
           switch (pawnMode) {
             case "1":
               let initiate2rowPawnMove = get_legal_pawn_first_2row_moves(game,piece);
@@ -84,19 +95,45 @@ function move_the_piece(piece){
           possibleMoves=get_legal_moves_by_piece(game,piece);
         }
       }
+      //no move available, return error msg
       if(possibleMoves.length==0){
         showToast("No legal move for this piece. Maybe try another piece or mode")
         updateStatus();
       }else{
+      //Make the move
         let randomIdx = Math.floor(Math.random() * possibleMoves.length)
         game.move(possibleMoves[randomIdx])
         board.position(game.fen())
         updateColor();
         updateStatus();
+        pieceMoved=true;
       }
       break;  
   }
+  //Write the history on the statistics div
   writeHistory()
+
+  //Check if the AI mode is on and a move has been made, we calculate the next move
+  if(AIActivated.checked && pieceMoved){
+    make_next_move_using_AI()
+  }
+}
+
+function make_next_move_using_AI() {
+  //disable control button while waiting for AI computing
+  disable_pieces_buttons()
+  let AIMode = document.querySelector('input[name="AIMode"]:checked').value;
+  switch (AIMode) {
+    case "Random":
+      window.setTimeout(makeRandomMove())
+      break;
+    case "OneMove":
+      window.setTimeout(makeBestMoveOne())
+      break;
+    case "MultiMove":
+      window.setTimeout(makeBestMove(AIDepth))
+      break;
+  }
 }
 
 
@@ -210,6 +247,28 @@ function updateStatus(){
   }
   document.getElementById("status").innerHTML = msg;
 }
+
+function disable_pieces_buttons() {
+  let elems = document.getElementsByClassName("pieces");
+    for(let i = 0; i < elems.length; i++) {
+      elems[i].disabled = true;
+    }
+}
+
+function enable_pieces_buttons() {
+  let elems = document.getElementsByClassName("pieces");
+    for(let i = 0; i < elems.length; i++) {
+      elems[i].disabled = false;
+    }
+}
+
+function update_ui_after_AI_move() {
+  enable_pieces_buttons()
+  updateColor();
+  updateStatus();
+  writeHistory()
+}
+
 
 /////////////////////////////////////////////////////////////////////
 /////Toast
@@ -407,25 +466,137 @@ function getPieceText(piece) {
   }
 }
 
+
 /////////////////////////////////////////////////////////////////////
-/////Random move for testing
+/////AI
 /////////////////////////////////////////////////////////////////////
 function makeRandomMove () {
-  let possibleMoves = game.moves()
+  //add some delay for smoother animation
+  let promise = new Promise((resolve, reject) => {
+    setTimeout(() => {
+      let possibleMoves = game.moves()
+      // game over
+      if (possibleMoves.length === 0) resolve()
+      let randomIdx = Math.floor(Math.random() * possibleMoves.length)
+      game.move(possibleMoves[randomIdx])
+      board.position(game.fen())
+      resolve();
+    }, 500);
+  });
 
-  // exit if the game is over
-  if (game.game_over()) return
-  console.log('game.game_over():', game.game_over())
-
-  move_the_piece({ type: 'p', color: currentColor})
-
-  //window.setTimeout(makeRandomMove, 500)
+  //reactive control button
+  promise.then(() => {
+    update_ui_after_AI_move()
+  });
 }
+
+function makeBestMoveOne() {
+  let promise = new Promise((resolve, reject) => {
+    setTimeout(() => {
+      // List all possible moves
+      let possibleMoves = game.moves();
+      // Sort moves randomly, so the same move isn't always picked on ties
+      possibleMoves.sort(function(a, b){return 0.5 - Math.random()});
+
+      // exit if the game is over
+      if (game.game_over() === true || possibleMoves.length === 0) resolve();
+
+      // Search for move with highest value
+      let bestMoveSoFar = null;
+      let bestMoveValue = Number.NEGATIVE_INFINITY;
+      possibleMoves.forEach(function(move) {
+        game.move(move);
+        let moveValue = evaluateBoard(game.board(), currentColor);
+        if (moveValue > bestMoveValue) {
+          bestMoveSoFar = move;
+          bestMoveValue = moveValue;
+        }
+        game.undo();
+      });
+      game.move(bestMoveSoFar)
+      board.position(game.fen())
+      resolve();
+    }, 500);
+  });
+  //reactive control button
+  promise.then(() => {
+    update_ui_after_AI_move()
+  });
+}
+
+function calcBestMove(depth,alpha,beta,isMaximizingPlayer) {
+  // Base case: evaluate board
+  if (depth === 0) {
+    value = evaluateBoard(game.board(), currentColor);
+    return [value, null]
+  }
+
+  // Recursive case: search possible moves
+  let bestMove = null; // best move not set yet
+  let possibleMoves = game.moves();
+  // Set random order for possible moves
+  possibleMoves.sort(function(a, b){return 0.5 - Math.random()});
+  // Set a default best move value
+  let bestMoveValue = isMaximizingPlayer ? Number.NEGATIVE_INFINITY
+                : Number.POSITIVE_INFINITY;
+  // Search through all possible moves
+  for (let i = 0; i < possibleMoves.length; i++) {
+    let move = possibleMoves[i];
+    // Make the move, but undo before exiting loop
+    game.move(move);
+    // Recursively get the value from this move
+    value = calcBestMove(depth-1,alpha,beta,!isMaximizingPlayer)[0];
+    // Log the value of this move
+    //console.log(isMaximizingPlayer ? 'Max: ' : 'Min: ', depth, move, value,
+    //bestMove, bestMoveValue);
+
+    if (isMaximizingPlayer) {
+      // Look for moves that maximize position
+      if (value > bestMoveValue) {
+        bestMoveValue = value;
+        bestMove = move;
+      }
+    alpha = Math.max(alpha, value);
+    } else {
+    // Look for moves that minimize position
+    if (value < bestMoveValue) {
+      bestMoveValue = value;
+      bestMove = move;
+    }
+    beta = Math.min(beta, value);
+    }
+    // Undo previous move
+    game.undo();
+    // Check for alpha beta pruning
+    // if (beta <= alpha) {
+    //   console.log('Prune', alpha, beta);
+    // break;
+    // }
+  }
+  return [bestMoveValue, bestMove || possibleMoves[0]];
+}
+
+
+function makeBestMove(depth) {
+  const promise = new Promise((resolve, reject) => {
+    setTimeout(() => {
+      let result = calcBestMove(depth,Number.NEGATIVE_INFINITY,Number.POSITIVE_INFINITY,true);
+      game.move(result[1])
+      board.position(game.fen())
+      resolve();
+    }, 500);
+  });
+  //reactive control button
+  promise.then(() => {
+    update_ui_after_AI_move()
+  });
+}
+
 
 /////////////////////////////////////////////////////////////////////
 /////START GAME
 /////////////////////////////////////////////////////////////////////
 
 board = Chessboard('myBoard', 'start')
-//window.setTimeout(makeRandomMove, 10)
+
 
