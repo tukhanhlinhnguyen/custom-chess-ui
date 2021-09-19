@@ -597,6 +597,9 @@ function makeBestMove(depth) {
 /////START GAME
 /////////////////////////////////////////////////////////////////////
 
-board = Chessboard('myBoard', 'start')
+board = Chessboard('myBoard',{
+  pieceTheme: dilena_piece_theme,
+  position: 'start'
+})
 
 
